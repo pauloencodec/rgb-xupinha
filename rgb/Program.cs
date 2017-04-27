@@ -21,15 +21,15 @@ namespace rgb
 
             var colors =
                 allFiles
-                    .Select(file => new { file = Path.GetFileNameWithoutExtension(file), color = ProcessFile(file) })
+                    .Select(file => new { file = Path.GetFileNameWithoutExtension(file), color = ProcessFile(file), lum = CalculateLuminance(file) })
                     .Where(r => r.color != Color.Empty)
-                    .Select(r => new { r.color.R, r.color.G, r.color.B, Hex = HexConverter(r.color), File = r.file })
+                    .Select(r => new { r.color.R, r.color.G, r.color.B, Hex = HexConverter(r.color), Lum = r.lum, File = r.file })
                     .ToList();
 
             if (format == "json")
                 Console.Write(JsonConvert.SerializeObject(colors));
             else
-                colors.ForEach(r => Console.WriteLine(string.Format("{0}, {1} {2} {3}, {4}", r.File, r.R, r.G, r.B, r.Hex)));
+                colors.ForEach(r => Console.WriteLine(string.Format("{0}, {1} {2} {3}, {4}, {5}", r.File, r.R, r.G, r.B, r.Hex, r.Lum)));
 
         }
 
@@ -75,6 +75,23 @@ namespace rgb
             }
 
             return destImage;
+        }
+
+        public static double? CalculateLuminance(string file)
+        {
+            try
+            {
+                var color = ProcessFile(file);
+                if (color == Color.Empty)
+                {
+                    return null;
+                }
+                return ((0.299 * color.R + 0.587 * color.G + 0.114 * color.B) / 256);
+            }
+            catch
+            {
+                return null;
+            }
         }
     }
 }
